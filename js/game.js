@@ -11,10 +11,10 @@
   // 曲が終われば道中の状況に関わらずCLEAR（全員解放できていればNICE）。
   // 敵にHPを削られてプレイヤーHPが0になったらGAME OVER。
   const CFG = {
-    songLength: 24,          // 1プレイで歌いきるフレーズ数（＝曲の長さ）
-    totalZako: 18,           // この曲に登場するザコの総数（有限編成。倒しても倒さなくても総数は固定）
+    songLength: 16,          // 1プレイで歌いきるフレーズ数（＝曲の長さ）
+    zakoUntilProgress: 0.82, // 曲の進行度がこの割合に達するまでザコを出し続ける（体数ではなく進行度で管理）
     zakoHp: 12,              // ザコの洗脳度（HP）
-    bossHp: 90,              // ボスの洗脳度（ザコを全員出し切った後に1度だけ出現）
+    bossHp: 90,              // ボスの洗脳度（ザコが出し切られて画面が空いたら1度だけ出現）
     spawnEveryStart: 1.7,    // 曲の始めの敵出現間隔（秒）
     spawnEveryEnd: 0.9,      // 曲の終盤の敵出現間隔（秒。短いほど同時に出る敵が増える＝後半の難化）
     baseSpeed: 0.05,         // 敵の接近速度（奥行き1.0を何秒で詰めるかの割合/秒。tier.speedMultで倍率）
@@ -65,7 +65,7 @@
       songLength: CFG.songLength, phrasesDone:0,
       enemies:[], target:null, enemyId:0,
       spawnTimer:0, bossActive:false, bossSpawned:false, bossDefeated:false,
-      zakoSpawned:0, zakoFreed:0, zakoLeaked:0,   // zakoLeaked>0ならNICE達成不可
+      zakoFreed:0, zakoLeaked:0,   // zakoLeaked>0ならNICE達成不可
       allies:[],                       // 解放して仲間になった人の見た目リスト（永続バフの源）
       running:true,
       startTime: performance.now(),
@@ -120,7 +120,6 @@
       z: 1.0,    // 奥行き：1.0=地平線（最奥）→ 0=プレイヤー
       speed: CFG.baseSpeed * (isBoss ? 0.45 : tier.speedMult) * (0.9 + Math.random()*0.3),
     };
-    if(!isBoss) s.zakoSpawned++;
     s.enemies.push(enemy);
     VTUI.setEnemyHp(enemy);
     positionEnemy(enemy);
@@ -272,17 +271,20 @@
     lastTime = now;
     const s = state;
 
-    // 敵の出現：ザコは有限編成（totalZako体）で、曲が進むほど出現間隔が短くなる。
-    // ザコを出し切って画面が空いたら、最後に1度だけボスが出現する。
+    // 敵の出現：曲の進行度（実時間ではなくフレーズの進み具合）が zakoUntilProgress に
+    // 達するまでザコを出し続ける。体数で管理しないので、曲の長さや打鍵速度が変わっても
+    // 「曲の大部分でずっと敵が来る」バランスが自然に保たれる。
+    // 進行度が達して画面が空いたら、最後に1度だけボスが出現する。
     s.spawnTimer += dt;
+    const progress = songProgress(s);
     const spawnEvery = CFG.spawnEveryStart +
-      (CFG.spawnEveryEnd - CFG.spawnEveryStart) * songProgress(s);
-    if(!s.bossSpawned && s.zakoSpawned >= CFG.totalZako && s.enemies.length === 0){
+      (CFG.spawnEveryEnd - CFG.spawnEveryStart) * progress;
+    if(!s.bossSpawned && progress >= CFG.zakoUntilProgress && s.enemies.length === 0){
       s.bossSpawned = true;
       s.bossActive = true;
       spawnEnemy(true);
       pickTarget();
-    }else if(!s.bossActive && s.zakoSpawned < CFG.totalZako && s.spawnTimer >= spawnEvery){
+    }else if(!s.bossActive && progress < CFG.zakoUntilProgress && s.spawnTimer >= spawnEvery){
       s.spawnTimer = 0;
       spawnEnemy(false);
       if(!s.target) pickTarget();
