@@ -105,6 +105,26 @@ const VTUI = (function(){
     h.classList.remove("hit"); void h.offsetWidth; h.classList.add("hit");
   }
 
+  // ---- 主人公のポーズ切替（idle=待機 / play=演奏 / groove=ノリノリ） ----
+  function setHeroPose(pose){
+    const h = $("hero");
+    if(h.classList.contains(pose)) return;
+    h.classList.remove("idle","play","groove");
+    h.classList.add(pose);
+  }
+
+  // ---- ギュイーン！ポップ（ノリノリ中のPERFECTで出る） ----
+  function showGyuin(){
+    const f = field();
+    const c = document.createElement("div");
+    c.className = "gyuin";
+    c.textContent = "ギュイーン！";
+    c.style.left = (f.clientWidth/2 + (Math.random()*180 - 90)) + "px";
+    c.style.top  = (f.clientHeight*0.58 + Math.random()*36) + "px";
+    f.appendChild(c);
+    setTimeout(() => c.remove(), 750);
+  }
+
   // ---- ビートインジケータ（拍の頭で強く光る） ----
   function beatPulse(phase){
     const el = $("beatPulse");
@@ -155,6 +175,6 @@ const VTUI = (function(){
   return {
     showScreen, buildSongList, setRhythmButtons, renderPhrase,
     createEnemyEl, setEnemyHp, showJudge, showFree, showCombo,
-    flashMiss, heroHit, beatPulse, updateHUD, showResult,
+    flashMiss, heroHit, setHeroPose, showGyuin, beatPulse, updateHUD, showResult,
   };
 })();

@@ -18,6 +18,8 @@
     phraseBonus: 4,          // フレーズ完走ボーナスダメージ
     judge: { perfectMs:70, goodMs:140, perfectMult:2.0, goodMult:1.5 },
     affinityMult: 1.5,       // 「刺さってる」（ジャンル一致）倍率
+    grooveCombo: 10,         // このコンボ以上でノリノリポーズになる
+    idleAfterMs: 1000,       // 何ms打鍵がないと待機ポーズに戻るか
   };
 
   // ---- 疑似3D視点の設定（敵は地平線から湧き、下中央のプレイヤーへ包囲接近） ----
@@ -31,6 +33,12 @@
 
   const settings = { rhythmOn: true };
   let state = null, rafId = null, lastTime = 0;
+
+  // ---- 主人公ポーズの状態管理 ----
+  let heroPose = "idle", lastTypeAt = 0;
+  function setPose(p){
+    if(heroPose !== p){ heroPose = p; VTUI.setHeroPose(p); }
+  }
 
   function shuffle(a){
     for(let i=a.length-1;i>0;i--){
@@ -152,6 +160,11 @@
       if(s.combo > s.maxCombo) s.maxCombo = s.combo;
       VTUI.showCombo(s.combo);
 
+      // ポーズ更新：打鍵中は演奏、コンボが乗るとノリノリ
+      lastTypeAt = performance.now();
+      setPose(s.combo >= CFG.grooveCombo ? "groove" : "play");
+      if(mult === CFG.judge.perfectMult && heroPose === "groove") VTUI.showGyuin();
+
       s.typed++;
       const complete = s.typed >= s.phrase.roman.length;
       VTUI.renderPhrase(s.phrase, s.typed);
@@ -167,6 +180,8 @@
       s.combo = 0;
       VTAudio.miss();
       VTUI.flashMiss();
+      lastTypeAt = performance.now();
+      setPose("play");   // コンボが切れたのでノリノリ解除
     }
     VTUI.updateHUD(s);
   }
@@ -250,6 +265,12 @@
     }
 
     if(!s.target && s.enemies.length) pickTarget();
+
+    // 1秒打鍵がなければ待機ポーズ（ギターを背負って立つ）に戻る
+    if(heroPose !== "idle" && performance.now() - lastTypeAt > CFG.idleAfterMs){
+      setPose("idle");
+    }
+
     VTUI.beatPulse(VTAudio.beatPhase());
     VTUI.updateHUD(s);
     rafId = requestAnimationFrame(loop);
@@ -257,8 +278,10 @@
 
   // ---- ゲーム開始・終了 ----
   function startGame(song){
-    field.querySelectorAll(".enemy,.cry").forEach(n => n.remove());
+    field.querySelectorAll(".enemy,.cry,.gyuin").forEach(n => n.remove());
     state = resetState(song);
+    lastTypeAt = 0;
+    setPose("idle");
     nextPhrase();
     VTUI.showScreen(null);
     VTUI.updateHUD(state);

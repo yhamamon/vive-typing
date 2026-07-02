@@ -33,7 +33,144 @@
   <div id="field">
     <div id="floor"></div>
     <div id="ground"></div>
-    <div id="hero">🕺</div>
+    <!-- 主人公：ギター弾き語り（背中越し）。idle=待機 / play=演奏 / groove=ノリノリ -->
+    <div id="hero" class="idle">
+      <!-- ノーマル（ギターを背中に担いで立つ） -->
+      <svg id="heroIdle" class="pose" viewBox="0 0 120 170" aria-hidden="true">
+        <ellipse cx="60" cy="161" rx="27" ry="5" fill="rgba(0,0,0,.45)"/>
+        <!-- 腕 -->
+        <rect x="33" y="74" width="9" height="28" rx="4.5" fill="#f2c9a0"/>
+        <rect x="78" y="74" width="9" height="28" rx="4.5" fill="#f2c9a0"/>
+        <circle cx="37.5" cy="104" r="5" fill="#f2c9a0"/>
+        <circle cx="82.5" cy="104" r="5" fill="#f2c9a0"/>
+        <!-- ジーンズ（ダメージ加工） -->
+        <rect x="42" y="92" width="36" height="16" fill="#4a7fb5"/>
+        <rect x="43" y="104" width="15" height="50" rx="5" fill="#4a7fb5"/>
+        <rect x="62" y="104" width="15" height="50" rx="5" fill="#4a7fb5"/>
+        <rect x="45" y="126" width="11" height="9" rx="3" fill="#7fa8d0"/>
+        <path d="M64 132h11 M65 137h9" stroke="#cfe0ee" stroke-width="2" stroke-linecap="round"/>
+        <!-- 靴 -->
+        <ellipse cx="50" cy="157" rx="10" ry="5" fill="#26262e"/>
+        <ellipse cx="70" cy="157" rx="10" ry="5" fill="#26262e"/>
+        <!-- Tシャツ（緑・白トリム） -->
+        <rect x="40" y="46" width="40" height="50" rx="9" fill="#3fae4a"/>
+        <rect x="31" y="49" width="14" height="27" rx="6" fill="#3fae4a"/>
+        <rect x="75" y="49" width="14" height="27" rx="6" fill="#3fae4a"/>
+        <rect x="31" y="71" width="14" height="5" rx="2.5" fill="#e9e9e9"/>
+        <rect x="75" y="71" width="14" height="5" rx="2.5" fill="#e9e9e9"/>
+        <rect x="50" y="44" width="20" height="5" rx="2.5" fill="#e9e9e9"/>
+        <!-- ストラップ -->
+        <path d="M72 48 L48 96" stroke="#e8ddc8" stroke-width="6" stroke-linecap="round"/>
+        <!-- 首・頭（後ろ姿＝髪） -->
+        <rect x="55" y="38" width="10" height="8" fill="#f2c9a0"/>
+        <path d="M45 24 Q48 8 60 8 Q72 8 75 24 Q77 34 71 40 Q66 45 60 45 Q54 45 49 40 Q43 34 45 24 Z" fill="#4a3020"/>
+        <path d="M52 16 Q56 26 53 38 M60 12 Q62 26 60 40 M68 16 Q65 26 67 38" stroke="#3a2416" stroke-width="1.5" fill="none"/>
+        <!-- ギター（背中に担ぐ・ネックは右下へ） -->
+        <path d="M62 92 L96 138" stroke="#6a4a2a" stroke-width="8" stroke-linecap="round"/>
+        <path d="M63 90 L97 136 M61 94 L95 140" stroke="#d8c8a8" stroke-width="1"/>
+        <polygon points="94,134 108,148 101,155 87,141" fill="#2a1c10"/>
+        <circle cx="99" cy="146" r="1.5" fill="#d8c8a8"/>
+        <circle cx="103" cy="150" r="1.5" fill="#d8c8a8"/>
+        <path d="M42 76 Q35 68 44 64 Q50 59 55 66 Q67 58 75 70 Q85 77 78 89 Q84 100 71 104 Q58 110 51 99 Q39 99 40 88 Q37 81 42 76 Z"
+              fill="#c01818" stroke="#8a1010" stroke-width="2"/>
+        <path d="M52 78 L66 90 M49 84 L63 96" stroke="#7a0e0e" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+
+      <!-- 演奏中（ギターを前に構える・右腕がストローク） -->
+      <svg id="heroPlay" class="pose" viewBox="0 0 120 170" aria-hidden="true">
+        <ellipse cx="60" cy="161" rx="27" ry="5" fill="rgba(0,0,0,.45)"/>
+        <!-- ジーンズ（少し開いたスタンス） -->
+        <rect x="42" y="92" width="36" height="16" fill="#4a7fb5"/>
+        <rect x="40" y="104" width="15" height="50" rx="5" fill="#4a7fb5" transform="rotate(4 47 104)"/>
+        <rect x="65" y="104" width="15" height="50" rx="5" fill="#4a7fb5" transform="rotate(-4 72 104)"/>
+        <rect x="43" y="126" width="11" height="9" rx="3" fill="#7fa8d0"/>
+        <path d="M68 132h11 M69 137h9" stroke="#cfe0ee" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="45" cy="157" rx="10" ry="5" fill="#26262e"/>
+        <ellipse cx="75" cy="157" rx="10" ry="5" fill="#26262e"/>
+        <!-- ギターのネック（左へ突き出す）とボディの端 -->
+        <path d="M42 82 L8 68" stroke="#6a4a2a" stroke-width="8" stroke-linecap="round"/>
+        <path d="M42 80 L8 66 M42 84 L8 70" stroke="#d8c8a8" stroke-width="1"/>
+        <polygon points="10,60 -2,62 -2,72 10,74" fill="#2a1c10"/>
+        <path d="M40 74 Q32 82 38 94 L45 91 Q40 83 45 77 Z" fill="#c01818" stroke="#8a1010" stroke-width="2"/>
+        <!-- Tシャツ -->
+        <rect x="40" y="46" width="40" height="50" rx="9" fill="#3fae4a"/>
+        <rect x="31" y="49" width="14" height="24" rx="6" fill="#3fae4a"/>
+        <rect x="31" y="68" width="14" height="5" rx="2.5" fill="#e9e9e9"/>
+        <rect x="50" y="44" width="20" height="5" rx="2.5" fill="#e9e9e9"/>
+        <!-- ストラップ -->
+        <path d="M72 48 L46 94" stroke="#e8ddc8" stroke-width="6" stroke-linecap="round"/>
+        <!-- 左腕（ネックを押さえる） -->
+        <rect x="14" y="64" width="26" height="9" rx="4.5" fill="#f2c9a0" transform="rotate(-6 40 70)"/>
+        <circle cx="15" cy="65" r="5" fill="#f2c9a0"/>
+        <!-- 右腕（ストローク・アニメ対象） -->
+        <g class="strum">
+          <rect x="74" y="48" width="12" height="24" rx="6" fill="#3fae4a" transform="rotate(-30 80 52)"/>
+          <rect x="74" y="66" width="12" height="4" rx="2" fill="#e9e9e9" transform="rotate(-30 80 52)"/>
+          <rect x="86" y="66" width="9" height="24" rx="4.5" fill="#f2c9a0" transform="rotate(24 90 68)"/>
+          <circle cx="82" cy="90" r="5" fill="#f2c9a0"/>
+        </g>
+        <!-- 首・頭 -->
+        <rect x="55" y="38" width="10" height="8" fill="#f2c9a0"/>
+        <g transform="rotate(-5 60 30)">
+          <path d="M45 24 Q48 8 60 8 Q72 8 75 24 Q77 34 71 40 Q66 45 60 45 Q54 45 49 40 Q43 34 45 24 Z" fill="#4a3020"/>
+          <path d="M52 16 Q56 26 53 38 M60 12 Q62 26 60 40 M68 16 Q65 26 67 38" stroke="#3a2416" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- 音符 -->
+        <text class="note n1" x="6" y="48" font-size="14" fill="#22e5ff">♪</text>
+        <text class="note n2" x="24" y="36" font-size="11" fill="#ff3bd4">♪</text>
+      </svg>
+
+      <!-- ノリノリ（のけぞってギュイーン！） -->
+      <svg id="heroGroove" class="pose" viewBox="0 0 140 170" aria-hidden="true">
+        <ellipse cx="68" cy="161" rx="36" ry="5" fill="rgba(0,0,0,.45)"/>
+        <!-- 大股のジーンズ -->
+        <polygon points="54,96 64,100 48,152 36,148" fill="#4a7fb5"/>
+        <polygon points="80,96 70,100 98,152 110,148" fill="#4a7fb5"/>
+        <rect x="40" y="128" width="11" height="8" rx="3" fill="#7fa8d0" transform="rotate(14 45 132)"/>
+        <path d="M88 130l10 4 M90 136l8 3" stroke="#cfe0ee" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="40" cy="153" rx="10" ry="5" fill="#26262e" transform="rotate(-8 40 153)"/>
+        <ellipse cx="106" cy="153" rx="10" ry="5" fill="#26262e" transform="rotate(8 106 153)"/>
+        <rect x="52" y="88" width="30" height="14" fill="#4a7fb5" transform="rotate(-6 67 95)"/>
+        <!-- のけぞる上体 -->
+        <g transform="rotate(-14 66 96)">
+          <rect x="46" y="48" width="40" height="50" rx="9" fill="#3fae4a"/>
+          <rect x="56" y="46" width="20" height="5" rx="2.5" fill="#e9e9e9"/>
+          <path d="M78 50 L52 96" stroke="#e8ddc8" stroke-width="6" stroke-linecap="round"/>
+          <rect x="61" y="40" width="10" height="9" fill="#f2c9a0"/>
+        </g>
+        <!-- 頭（大きくのけぞる） -->
+        <g transform="rotate(-24 56 30)">
+          <path d="M41 26 Q44 10 56 10 Q68 10 71 26 Q73 36 67 42 Q62 47 56 47 Q50 47 45 42 Q39 36 41 26 Z" fill="#4a3020"/>
+          <path d="M48 18 Q52 28 49 40 M56 14 Q58 28 56 42 M64 18 Q61 28 63 40" stroke="#3a2416" stroke-width="1.5" fill="none"/>
+        </g>
+        <!-- ギター（ネックを高く掲げる） -->
+        <path d="M84 82 L122 30" stroke="#6a4a2a" stroke-width="8" stroke-linecap="round"/>
+        <path d="M82 81 L120 29 M86 84 L124 32" stroke="#d8c8a8" stroke-width="1"/>
+        <polygon points="118,24 130,12 137,19 125,31" fill="#2a1c10"/>
+        <circle cx="127" cy="20" r="1.5" fill="#d8c8a8"/>
+        <circle cx="131" cy="24" r="1.5" fill="#d8c8a8"/>
+        <path d="M72 70 Q64 64 68 55 Q60 50 68 44 Q64 34 76 36 Q84 28 92 38 Q102 42 96 54 Q102 64 90 70 Q86 82 74 78 Q68 78 72 70 Z"
+              transform="rotate(46 82 58) translate(0 22)"
+              fill="#c01818" stroke="#8a1010" stroke-width="2"/>
+        <!-- 左腕（ネックの上のほうへ） -->
+        <rect x="74" y="42" width="38" height="9" rx="4.5" fill="#f2c9a0" transform="rotate(-28 76 48)"/>
+        <circle cx="110" cy="32" r="5" fill="#f2c9a0"/>
+        <!-- 右腕（激しくストローク・アニメ対象） -->
+        <g class="strumBig">
+          <rect x="76" y="54" width="12" height="22" rx="6" fill="#3fae4a" transform="rotate(-46 82 58)"/>
+          <rect x="88" y="68" width="9" height="24" rx="4.5" fill="#f2c9a0" transform="rotate(18 92 70)"/>
+          <circle cx="86" cy="92" r="5" fill="#f2c9a0"/>
+        </g>
+        <!-- ギュイーンの火花 -->
+        <g class="spark" stroke="#ffd83b" stroke-width="3" stroke-linecap="round">
+          <path d="M126 8 L132 2"/>
+          <path d="M134 16 L142 12"/>
+          <path d="M136 26 L144 28"/>
+        </g>
+        <text class="note n1" x="118" y="46" font-size="15" fill="#ffd83b">♪</text>
+        <text class="note n2" x="104" y="20" font-size="12" fill="#ff3bd4">♪</text>
+      </svg>
+    </div>
     <div id="comboPop"></div>
     <div id="judgePop"></div>
     <div id="flash"></div>
