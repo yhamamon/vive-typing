@@ -91,14 +91,31 @@ body{
   25%{opacity:1;transform:translate(-50%,-14px) rotate(-8deg) scale(1.15);}
   100%{opacity:0;transform:translate(-50%,-46px) rotate(-6deg) scale(1);}}
 
+/* 「敵を倒し切った」バナー：ここから先は合唱パート、という一拍の区切り */
+#victoryBanner{
+  position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);
+  z-index:18;text-align:center;font-size:32px;font-weight:900;letter-spacing:2px;
+  color:var(--gold);text-shadow:0 0 18px var(--pink),3px 3px 0 #000;
+  opacity:0;pointer-events:none;
+}
+#victoryBanner small{display:block;font-size:14px;font-weight:normal;color:var(--cyan);
+  letter-spacing:1px;margin-top:6px;text-shadow:none;}
+#victoryBanner.show{animation:victoryBanner 2.4s ease-out forwards;}
+@keyframes victoryBanner{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.7);}
+  15%{opacity:1;transform:translate(-50%,-50%) scale(1.05);}
+  25%{transform:translate(-50%,-50%) scale(1);}
+  78%{opacity:1;}
+  100%{opacity:0;}}
+
 /* ===== 仲間（解放した人。プレイヤーの左右に並び、一緒に歌う。打ち込みパネルとは重ならない高さ） ===== */
 #allies{
   position:absolute;left:50%;bottom:15%;width:0;height:0;z-index:13;pointer-events:none;
 }
 .allyIcon{
-  position:absolute;bottom:calc(var(--row) * 34px);font-size:24px;
+  position:absolute;bottom:calc(var(--row) * 22px);font-size:21px;
   /* --side: 偶数目=左(-1) / 奇数目=右(1)。--row: 外側の人ほど上の段に積み上がる */
-  left:calc(var(--side) * (74px + var(--row) * 30px));
+  left:calc(var(--side) * (58px + var(--row) * 20px));
   transform:translateX(-50%);
   filter:drop-shadow(0 0 6px var(--cyan));
   animation:allySing .6s ease-in-out infinite;

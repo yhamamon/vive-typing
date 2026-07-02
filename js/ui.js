@@ -130,6 +130,12 @@ const VTUI = (function(){
     setTimeout(() => c.remove(), 750);
   }
 
+  // ---- 「敵を倒し切った」バナー（あとは合唱パート、という区切りを一度だけ知らせる） ----
+  function showVictoryBanner(){
+    const el = $("victoryBanner");
+    el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  }
+
   // ---- 仲間表示（解放した人をプレイヤーの左右に交互に並べる。タイピングパネルとは重ならない位置） ----
   function updateAllies(allies, cap){
     const box = $("allies");
@@ -209,7 +215,7 @@ const VTUI = (function(){
   return {
     showScreen, buildSongList, setRhythmButtons, renderPhrase,
     createEnemyEl, setEnemyHp, showJudge, showFree, showCombo,
-    flashMiss, heroHit, setHeroPose, showGyuin, updateAllies,
+    flashMiss, heroHit, setHeroPose, showGyuin, updateAllies, showVictoryBanner,
     beatPulse, updateHUD, showResult,
   };
 })();

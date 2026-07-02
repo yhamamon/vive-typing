@@ -12,7 +12,8 @@
   // 敵にHPを削られてプレイヤーHPが0になったらGAME OVER。
   const CFG = {
     songLength: 16,          // 1プレイで歌いきるフレーズ数（＝曲の長さ）
-    zakoUntilProgress: 0.82, // 曲の進行度がこの割合に達するまでザコを出し続ける（体数ではなく進行度で管理）
+    zakoUntilProgress: 0.62, // 曲の進行度がこの割合に達するまでザコを出し続ける（体数ではなく進行度で管理）
+                             // 残りはボス戦＋「敵を倒し切ってあとは歌うだけ」の合唱パートに充てる
     zakoHp: 12,              // ザコの洗脳度（HP）
     bossHp: 90,              // ボスの洗脳度（ザコが出し切られて画面が空いたら1度だけ出現）
     spawnEveryStart: 1.7,    // 曲の始めの敵出現間隔（秒）
@@ -25,7 +26,7 @@
     affinityMult: 1.5,       // 「刺さってる」（ジャンル一致）倍率
     grooveCombo: 10,         // このコンボ以上でノリノリポーズになる
     idleAfterMs: 1000,       // 何ms打鍵がないと待機ポーズに戻るか
-    allyVisualCap: 10,       // 仲間アイコンを画面に並べる最大数（それ以降は+N表示）
+    allyVisualCap: 20,       // 仲間アイコンを画面に並べる最大数（それ以降は+N表示。軽量なDOM要素なので増やしても負荷は問題ない）
   };
 
   // ---- 疑似3D視点の設定（敵は地平線から湧き、下中央のプレイヤーへ包囲接近） ----
@@ -66,6 +67,7 @@
       enemies:[], target:null, enemyId:0,
       spawnTimer:0, bossActive:false, bossSpawned:false, bossDefeated:false,
       zakoFreed:0, zakoLeaked:0,   // zakoLeaked>0ならNICE達成不可
+      victoryShown:false,          // 「敵を倒し切った」バナーを一度だけ出すためのフラグ
       allies:[],                       // 解放して仲間になった人の見た目リスト（永続バフの源）
       running:true,
       startTime: performance.now(),
@@ -312,6 +314,13 @@
           return;
         }
       }
+    }
+
+    // 敵を全て倒し切った（ボスが出た場合はそれも撃破済み）瞬間に一度だけ、
+    // 「あとはみんなで歌うだけ」の合唱パートへの切り替わりを知らせる
+    if(!s.victoryShown && progress >= CFG.zakoUntilProgress && s.bossSpawned && !s.bossActive && s.enemies.length === 0){
+      s.victoryShown = true;
+      VTUI.showVictoryBanner();
     }
 
     if(!s.target && s.enemies.length) pickTarget();
