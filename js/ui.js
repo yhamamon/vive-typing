@@ -48,17 +48,17 @@ const VTUI = (function(){
       '<span class="rest">'+esc(r.slice(typed+1))+'</span>';
   }
 
-  // ---- 敵のDOM生成（HPバー・ジャンルアイコン付き。ringColor/hueでティアの見た目を変える） ----
-  function createEnemyEl(look, genreIcon, isBoss, vibed, ringColor, hue){
+  // ---- 敵のDOM生成（HPバー・ジャンルアイコン付き。isSpecialは中ボス/ボスの大きめ表示、ringColorで種別を色分け） ----
+  function createEnemyEl(look, genreIcon, isSpecial, vibed, ringColor, hue){
     const el = document.createElement("div");
-    el.className = "enemy" + (isBoss ? " boss" : "") + (vibed ? " vibed" : "");
+    el.className = "enemy" + (isSpecial ? " boss" : "") + (vibed ? " vibed" : "");
     el.innerHTML =
       '<div class="hpbar"><div class="hpfill"></div></div>'+
       '<div class="glabel">'+genreIcon+'</div>'+
       '<div class="body">'+look+'</div>';
     if(ringColor) el.querySelector(".hpbar").style.borderColor = ringColor;
     if(hue){
-      const shadow = isBoss ? "drop-shadow(0 0 20px var(--pink))" : "drop-shadow(0 3px 4px #000)";
+      const shadow = isSpecial ? "drop-shadow(0 0 20px var(--pink))" : "drop-shadow(0 3px 4px #000)";
       el.querySelector(".body").style.filter = "hue-rotate(" + hue + "deg) " + shadow;
     }
     field().appendChild(el);
@@ -174,7 +174,7 @@ const VTUI = (function(){
   function updateHUD(s){
     $("hpfill").style.width = s.hp + "%";
     $("score").textContent = s.score;
-    $("remain").textContent = Math.max(0, s.songLength - s.phrasesDone);
+    $("remain").textContent = Math.max(0, s.song.phrases.length - s.phraseIdx);
     $("combo").textContent = s.combo;
     $("freed").textContent = s.freed;
     const mins = (performance.now() - s.startTime) / 60000;
@@ -203,7 +203,7 @@ const VTUI = (function(){
     }
     $("rank").textContent = rank;
     $("rScore").textContent = s.score;
-    $("rPhrase").textContent = s.phrasesDone + " / " + s.songLength;
+    $("rPhrase").textContent = s.phraseIdx + " / " + s.song.phrases.length;
     $("rFreed").textContent = s.freed;
     $("rWpm").textContent = wpm + " WPM";
     $("rAcc").textContent = acc + "%";

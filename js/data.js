@@ -1,7 +1,10 @@
 "use strict";
 /* =========================================================================
    VT_DATA: 曲・フレーズ・敵のデータ。ここを編集して自由に追加・差し替えできます。
-   ・phrases: {jp:"画面に出る表示", roman:"実際に打つ文字"} の形
+   ・phrases: {section, jp:"画面に出る表示", roman:"実際に打つ文字"} の配列。
+     シャッフルせず先頭から順番に再生される＝曲の構成そのもの。
+     section: "verseA"(Aメロ) / "verseB"(Bメロ) / "chorus"(サビ＝中ボス出現)
+              / "finalChorus"(大サビ＝ボス出現) / "outro"(戦闘なし。歌い切って終わる)
    ・melody : 正解キーを打つたびに1音ずつ鳴る音符（ループする）
    ・bass   : 1小節ごとのベース音（ループする）
    ・歌詞・曲名はすべてオリジナル（実在曲のオマージュ「風」）。
@@ -27,14 +30,20 @@ const VT_DATA = {
               "E4","G4","A4","C5","B4","A4","G4","E4"],
       bass:["E2","C2","D2","E2"],
       phrases:[
-        {jp:"君と踊る真夜中",       roman:"kimitoodorumayonaka"},
-        {jp:"ネオンが呼んでいる",   roman:"neongayondeiru"},
-        {jp:"眠らない街のリズム",   roman:"nemuranaimachinorizumu"},
-        {jp:"高鳴る胸の鼓動",       roman:"takanarumunenokodou"},
-        {jp:"夜明けまで踊ろう",     roman:"yoakemadeodorou"},
-        {jp:"光る街並みを抜けて",   roman:"hikarumachinamiwonukete"},
-        {jp:"土曜の夜の魔法",       roman:"doyounoyorunomahou"},
-        {jp:"恋はメロウな魔法",     roman:"koihamerounamahou"},
+        {section:"verseA", jp:"静かな夜が始まる",     roman:"shizukanayorugahajimaru"},
+        {section:"verseA", jp:"窓の外は雨上がり",     roman:"madonosotohaameagari"},
+        {section:"verseA", jp:"君を待つこの部屋で",   roman:"kimiwomatsukonoheyade"},
+        {section:"verseB", jp:"電話越しの声が揺れる", roman:"denwagoshinokoegayureru"},
+        {section:"verseB", jp:"少しだけ大人になった", roman:"sukoshidakeotonaninatta"},
+        {section:"verseB", jp:"答えはまだ出せなくて", roman:"kotaehamadadasenakute"},
+        {section:"chorus", jp:"君と踊る真夜中",       roman:"kimitoodorumayonaka"},
+        {section:"chorus", jp:"ネオンが呼んでいる",   roman:"neongayondeiru"},
+        {section:"chorus", jp:"眠らない街のリズム",   roman:"nemuranaimachinorizumu"},
+        {section:"finalChorus", jp:"高鳴る胸の鼓動",     roman:"takanarumunenokodou"},
+        {section:"finalChorus", jp:"夜明けまで踊ろう",   roman:"yoakemadeodorou"},
+        {section:"finalChorus", jp:"光る街並みを抜けて", roman:"hikarumachinamiwonukete"},
+        {section:"finalChorus", jp:"土曜の夜の魔法",     roman:"doyounoyorunomahou"},
+        {section:"outro", jp:"恋はメロウな魔法",       roman:"koihamerounamahou"},
       ],
     },
     {
@@ -46,14 +55,20 @@ const VT_DATA = {
               "E3","E3","G3","A3","B3","A3","G3","E3"],
       bass:["E1","E1","F1","G1"],
       phrases:[
-        {jp:"燃え上がれ魂",         roman:"moeagaretamashii"},
-        {jp:"鋼の咆哮",             roman:"haganenohoukou"},
-        {jp:"地獄の業火を越えて",   roman:"jigokunogoukawokoete"},
-        {jp:"叫べ限界まで",         roman:"sakebegenkaimade"},
-        {jp:"轟音の嵐",             roman:"gouonnoarashi"},
-        {jp:"拳を突き上げろ",       roman:"kobushiwotsukiagero"},
-        {jp:"闇を切り裂く稲妻",     roman:"yamiwokirisakuinazuma"},
-        {jp:"走れ疾風のように",     roman:"hashirehayatenoyouni"},
+        {section:"verseA", jp:"牙を研ぎ澄ませ",       roman:"kibawotogisumase"},
+        {section:"verseA", jp:"血が滾る夜明け前",     roman:"chigatagiruyoakemae"},
+        {section:"verseA", jp:"闇の中で目覚めろ",     roman:"yaminonakademezamero"},
+        {section:"verseB", jp:"拳を握りしめて",       roman:"kobushiwonigirishimete"},
+        {section:"verseB", jp:"心臓が加速する",       roman:"shinzougakasokusuru"},
+        {section:"verseB", jp:"限界などない",         roman:"genkainadonai"},
+        {section:"chorus", jp:"燃え上がれ魂",         roman:"moeagaretamashii"},
+        {section:"chorus", jp:"鋼の咆哮",             roman:"haganenohoukou"},
+        {section:"chorus", jp:"叫べ限界まで",         roman:"sakebegenkaimade"},
+        {section:"finalChorus", jp:"地獄の業火を越えて", roman:"jigokunogoukawokoete"},
+        {section:"finalChorus", jp:"轟音の嵐",           roman:"gouonnoarashi"},
+        {section:"finalChorus", jp:"拳を突き上げろ",     roman:"kobushiwotsukiagero"},
+        {section:"finalChorus", jp:"闇を切り裂く稲妻",   roman:"yamiwokirisakuinazuma"},
+        {section:"outro", jp:"走れ疾風のように",       roman:"hashirehayatenoyouni"},
       ],
     },
     {
@@ -65,20 +80,27 @@ const VT_DATA = {
               "F4","A4","C5","A4","G4","E4","D4","C4"],
       bass:["C2","A1","F1","G1"],
       phrases:[
-        {jp:"諦めない心",           roman:"akiramenaikokoro"},
-        {jp:"奇跡は起こすもの",     roman:"kisekihaokosumono"},
-        {jp:"君の名を呼ぶ声",       roman:"kiminonawoyobukoe"},
-        {jp:"走り出せ明日へ",       roman:"hashiridaseasuhe"},
-        {jp:"仲間と共に立ち上がれ", roman:"nakamatotomonitachiagare"},
-        {jp:"涙を拭いて笑おう",     roman:"namidawofuitewaraou"},
-        {jp:"必殺の技が光る",       roman:"hissatsunowazagahikaru"},
-        {jp:"運命を越えてゆけ",     roman:"unmeiwokoeteyuke"},
+        {section:"verseA", jp:"夜明け前の静けさ",       roman:"yoakemaenoshizukesa"},
+        {section:"verseA", jp:"一人じゃないと気づいた", roman:"hitorijanaitokizuita"},
+        {section:"verseA", jp:"小さな一歩からでいい",   roman:"chiisanaippokaradeii"},
+        {section:"verseB", jp:"涙の数だけ強くなる",     roman:"namidanokazudaketsuyokunaru"},
+        {section:"verseB", jp:"夢を諦めきれなくて",     roman:"yumewoakiramekirenakute"},
+        {section:"verseB", jp:"この手を離さないで",     roman:"konotewohanasanaide"},
+        {section:"chorus", jp:"諦めない心",             roman:"akiramenaikokoro"},
+        {section:"chorus", jp:"奇跡は起こすもの",       roman:"kisekihaokosumono"},
+        {section:"chorus", jp:"君の名を呼ぶ声",         roman:"kiminonawoyobukoe"},
+        {section:"finalChorus", jp:"走り出せ明日へ",           roman:"hashiridaseasuhe"},
+        {section:"finalChorus", jp:"仲間と共に立ち上がれ",     roman:"nakamatotomonitachiagare"},
+        {section:"finalChorus", jp:"必殺の技が光る",           roman:"hissatsunowazagahikaru"},
+        {section:"finalChorus", jp:"運命を越えてゆけ",         roman:"unmeiwokoeteyuke"},
+        {section:"outro", jp:"涙を拭いて笑おう",         roman:"namidawofuitewaraou"},
       ],
     },
   ],
 
   // ---- 敵（洗脳された人々とAIボス） ----
   enemies: {
+    zakoLooks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
     // 洗脳が解けた（解放された）ときのセリフ
     frees:[
       "ハッ…俺は何を…","目が覚めた…！","この曲…懐かしい…","ありがとう…！",
@@ -86,18 +108,8 @@ const VT_DATA = {
     ],
   },
 
-  // ---- 敵ティア：曲の進行度（0〜1）が進むほど、後半に硬い・別の見た目の敵が混ざる ----
-  // minProgress以上の進行度で出現。hpMult/speedMultはzakoHp/baseSpeedへの倍率。
-  // hue: CSS hue-rotate(deg) で色味を変えて「違う敵」感を出す。ringColor: HPバー枠の色。
-  enemyTiers:[
-    { minProgress:0.00, label:"洗脳された人々", looks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
-      hpMult:1.0, speedMult:1.0,  hue:0,   ringColor:"#22e5ff" },
-    { minProgress:0.35, label:"強化戦闘員",     looks:["🥷","🦹","👺","🧌"],
-      hpMult:1.7, speedMult:1.1,  hue:110, ringColor:"#7dff5a" },
-    { minProgress:0.7,  label:"機械化兵",       looks:["🤖","👽","💀"],
-      hpMult:2.4, speedMult:1.2,  hue:260, ringColor:"#c07dff" },
-  ],
-  // ---- ボス（1曲に1体だけ登場する最終戦） ----
+  // ---- 中ボス（サビで1体出現）・ボス（大サビで1体出現）の見た目 ----
+  midBossLook:"👹",
   bossLook:"🤖",
 
   // ---- 仲間ダメージボーナス：s.allies.length に応じてダメージ倍率が伸びる ----
