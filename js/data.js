@@ -79,14 +79,29 @@ const VT_DATA = {
 
   // ---- 敵（洗脳された人々とAIボス） ----
   enemies: {
-    zakoLooks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
-    bossLook:"🤖",
     // 洗脳が解けた（解放された）ときのセリフ
     frees:[
       "ハッ…俺は何を…","目が覚めた…！","この曲…懐かしい…","ありがとう…！",
       "心が…踊ってる！","バイブスを感じる…！","私、戻ってきた…！",
     ],
   },
+
+  // ---- 敵ティア：ステージが進むほどAIの支配が深く食い込み、敵が硬く・別の見た目になる ----
+  // minStage以上のステージで出現。hpMult/speedMultはステージ1のzakoHp/baseSpeedへの倍率。
+  // hue: CSS hue-rotate(deg) で色味を変えて「違う敵」感を出す。ringColor: HPバー枠の色。
+  enemyTiers:[
+    { minStage:1, label:"洗脳された人々",   looks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
+      hpMult:1.0, speedMult:1.0, hue:0,   ringColor:"#22e5ff" },
+    { minStage:2, label:"強化戦闘員",       looks:["🥷","🦹","👺","🧌"],
+      hpMult:1.9, speedMult:1.12, hue:110, ringColor:"#7dff5a" },
+    { minStage:3, label:"機械化兵",         looks:["🤖","👽","💀"],
+      hpMult:3.0, speedMult:1.25, hue:260, ringColor:"#c07dff" },
+  ],
+  // ---- ボスの見た目（ステージごとに切り替わる。足りない分は最後のものをループ） ----
+  bossLooks:["🤖","👹","👽","🛸"],
+
+  // ---- 仲間ダメージボーナス：s.allies.length に応じてダメージ倍率が伸びる ----
+  allyDamagePerAlly: 0.06,
 
   // ---- 称号（上から順に判定。score以上かつ正確率acc以上） ----
   ranks:[

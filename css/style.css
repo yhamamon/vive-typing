@@ -91,6 +91,43 @@ body{
   25%{opacity:1;transform:translate(-50%,-14px) rotate(-8deg) scale(1.15);}
   100%{opacity:0;transform:translate(-50%,-46px) rotate(-6deg) scale(1);}}
 
+/* ===== 仲間（解放した人。プレイヤーを囲むように並び、一緒に歌う） ===== */
+#allies{
+  position:absolute;left:50%;bottom:7%;transform:translateX(-50%);
+  width:280px;height:0;z-index:14;pointer-events:none;
+}
+.allyIcon{
+  position:absolute;bottom:0;font-size:26px;
+  /* --i 番目ごとに扇状に左右へ広げて配置 */
+  left:calc(50% + (var(--i) - 4.5) * 26px);
+  filter:drop-shadow(0 0 6px var(--cyan));
+  animation:allySing .6s ease-in-out infinite;
+  animation-delay:calc(var(--i) * .06s);
+}
+@keyframes allySing{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-5px) rotate(-4deg);}}
+.allyMore{
+  position:absolute;bottom:6px;left:calc(50% + 130px);
+  font-size:13px;font-weight:bold;color:var(--gold);
+  background:rgba(0,0,10,.6);border:1px solid var(--gold);border-radius:10px;padding:2px 8px;
+}
+
+/* ===== ステージ進行バナー ===== */
+#stageBanner{
+  position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);
+  z-index:18;text-align:center;font-size:46px;font-weight:900;letter-spacing:4px;
+  color:var(--gold);text-shadow:0 0 20px var(--pink),3px 3px 0 #000;
+  opacity:0;pointer-events:none;
+}
+#stageBanner small{display:block;font-size:15px;font-weight:normal;color:var(--cyan);
+  letter-spacing:2px;margin-top:6px;text-shadow:none;}
+#stageBanner.show{animation:stageBanner 2.2s ease-out forwards;}
+@keyframes stageBanner{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.7);}
+  15%{opacity:1;transform:translate(-50%,-50%) scale(1.05);}
+  25%{transform:translate(-50%,-50%) scale(1);}
+  80%{opacity:1;}
+  100%{opacity:0;}}
+
 /* ===== 敵（left/top/scale はJSが毎フレーム設定する） ===== */
 .enemy{
   position:absolute;transform:translate(-50%,-100%);
@@ -201,7 +238,6 @@ body{
 /* 結果画面 */
 #resultTitle{font-size:min(12vw,58px);font-weight:900;letter-spacing:4px;
   color:var(--pink);text-shadow:0 0 20px var(--pink),3px 3px 0 #000;}
-#resultTitle.clear{color:var(--gold);text-shadow:0 0 20px var(--gold),3px 3px 0 #000;}
 #rank{font-size:min(9vw,44px);font-weight:900;color:var(--gold);
   text-shadow:0 0 18px var(--pink);margin:6px 0;}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:10px 30px;

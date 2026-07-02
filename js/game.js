@@ -8,11 +8,13 @@
 
   // ---- ゲームバランス調整値 ----
   const CFG = {
-    zakoHp: 12,              // ザコの洗脳度（HP）
-    bossHp: 70,              // ボスの洗脳度
-    zakoToBoss: 10,          // 何人解放でボス出現か
+    zakoHp: 12,              // ザコの洗脳度（HP・ステージ1基準。tier.hpMultで倍率）
+    bossHp: 70,              // ボスの洗脳度（ステージ1基準。ステージが進むと成長）
+    bossHpGrowth: 1.55,      // ステージが1つ進むごとのボスHP成長倍率
+    zakoToBoss: 8,           // 何人解放で次のボスが出現するか（ステージ基準値）
+    zakoToBossGrowth: 2,     // ステージが1つ進むごとに必要人数が何人増えるか
     spawnEvery: 1.7,         // 敵の出現間隔（秒）
-    baseSpeed: 0.05,         // 敵の接近速度（奥行き1.0を何秒で詰めるかの割合/秒）
+    baseSpeed: 0.05,         // 敵の接近速度（奥行き1.0を何秒で詰めるかの割合/秒。tier.speedMultで倍率）
     reachDamage: 15,         // 敵に到達されたときのダメージ
     bossReachDamage: 30,
     phraseBonus: 4,          // フレーズ完走ボーナスダメージ
@@ -20,6 +22,7 @@
     affinityMult: 1.5,       // 「刺さってる」（ジャンル一致）倍率
     grooveCombo: 10,         // このコンボ以上でノリノリポーズになる
     idleAfterMs: 1000,       // 何ms打鍵がないと待機ポーズに戻るか
+    allyVisualCap: 10,       // 仲間アイコンを画面に並べる最大数（それ以降は+N表示）
   };
 
   // ---- 疑似3D視点の設定（敵は地平線から湧き、下中央のプレイヤーへ包囲接近） ----
@@ -58,9 +61,19 @@
       phrase:null, typed:0,
       enemies:[], target:null, enemyId:0,
       spawnTimer:0, bossPending:false, bossActive:false,
+      stage:1, stageFreed:0,          // 現ステージで倒した人数（ボス出現の判定用）
+      allies:[],                       // 解放して仲間になった人の見た目リスト（永続バフの源）
       running:true,
       startTime: performance.now(),
     };
+  }
+
+  // ---- 現ステージの敵ティアを取得（minStage以下の中で最も高いもの） ----
+  function currentTier(stage){
+    const tiers = VT_DATA.enemyTiers;
+    let best = tiers[0];
+    for(const t of tiers){ if(t.minStage <= stage) best = t; }
+    return best;
   }
 
   // ---- フレーズを次へ（使い切ったらシャッフルし直してループ） ----
@@ -75,27 +88,31 @@
     VTUI.renderPhrase(s.phrase, 0);
   }
 
-  // ---- 敵の生成 ----
+  // ---- 敵の生成（ステージに応じたティアから見た目・強さを決める） ----
   function spawnEnemy(isBoss){
     const s = state;
-    const E = VT_DATA.enemies;
     const genreKeys = Object.keys(VT_DATA.genres);
+    const tier = currentTier(s.stage);
     // ボスはAIなので相性なし。ザコはランダムなジャンルが「刺さる」
     const genre = isBoss ? null : genreKeys[Math.floor(Math.random()*genreKeys.length)];
     const icon  = isBoss ? "⚡" : VT_DATA.genres[genre].icon;
-    const look  = isBoss ? E.bossLook : E.zakoLooks[Math.floor(Math.random()*E.zakoLooks.length)];
+    const looks = VT_DATA.bossLooks;
+    const look  = isBoss ? looks[Math.min(s.stage-1, looks.length-1)]
+                          : tier.looks[Math.floor(Math.random()*tier.looks.length)];
     const vibed = !isBoss && genre === s.song.genre;
-    const el = VTUI.createEnemyEl(look, icon, isBoss, vibed);
+    const bossHp = Math.round(CFG.bossHp * Math.pow(CFG.bossHpGrowth, s.stage-1));
+    const zakoHp = Math.round(CFG.zakoHp * tier.hpMult);
+    const el = VTUI.createEnemyEl(look, icon, isBoss, vibed, isBoss ? "#ff3bd4" : tier.ringColor, tier.hue);
     const enemy = {
       id: ++s.enemyId, el,
       hpEl: el.querySelector(".hpfill"),
-      genre, isBoss,
-      maxHp: isBoss ? CFG.bossHp : CFG.zakoHp,
-      hp:    isBoss ? CFG.bossHp : CFG.zakoHp,
+      genre, isBoss, look,
+      maxHp: isBoss ? bossHp : zakoHp,
+      hp:    isBoss ? bossHp : zakoHp,
       // 地平線上のどこから湧くか（横に散らばる。ボスは正面）
       spawnX: isBoss ? 0.5 : 0.08 + Math.random()*0.84,
       z: 1.0,    // 奥行き：1.0=地平線（最奥）→ 0=プレイヤー
-      speed: CFG.baseSpeed * (isBoss ? 0.45 : 1) * (0.9 + Math.random()*0.3),
+      speed: CFG.baseSpeed * (isBoss ? 0.45 : tier.speedMult) * (0.9 + Math.random()*0.3),
     };
     s.enemies.push(enemy);
     VTUI.setEnemyHp(enemy);
@@ -192,29 +209,43 @@
     VTUI.updateHUD(s);
   }
 
-  // ---- ターゲットへダメージ（相性一致でさらに増加） ----
+  // ---- ターゲットへダメージ（相性一致・仲間ボーナスでさらに増加） ----
   function damageTarget(dmg){
     const s = state;
     if(!s.target) pickTarget();
     const t = s.target;
     if(!t) return;
     if(t.genre && t.genre === s.song.genre) dmg *= CFG.affinityMult;
+    dmg *= 1 + s.allies.length * VT_DATA.allyDamagePerAlly;   // 仲間が増えるほど攻撃力アップ
     t.hp -= dmg;
     VTUI.setEnemyHp(t);
     t.el.classList.remove("dmg"); void t.el.offsetWidth; t.el.classList.add("dmg");
     if(t.hp <= 0) free(t);
   }
 
-  // ---- 解放（洗脳が解けた） ----
+  // ---- 解放（洗脳が解けた→仲間になって一緒に歌う） ----
   function free(e){
     const s = state;
     s.freed++;
     s.score += e.isBoss ? 1000 : 100;
     VTAudio.freeChime();
     VTUI.showFree(e.el);
+    s.allies.push({ look: e.look });
+    VTUI.updateAllies(s.allies, CFG.allyVisualCap);
     removeEnemy(e);
-    if(e.isBoss){ finish(true); return; }
-    if(s.freed >= CFG.zakoToBoss && !s.bossActive && !s.bossPending){
+
+    if(e.isBoss){
+      // ボスを解放したら次のステージへ（より硬い敵が出てくる）
+      s.bossActive = false;
+      s.stage++;
+      s.stageFreed = 0;
+      VTUI.showStageBanner(s.stage);
+      pickTarget();
+      return;
+    }
+    s.stageFreed++;
+    const need = CFG.zakoToBoss + (s.stage-1) * CFG.zakoToBossGrowth;
+    if(s.stageFreed >= need && !s.bossActive && !s.bossPending){
       s.bossPending = true;
     }
     pickTarget();
@@ -264,7 +295,7 @@
         if(s.hp <= 0){
           s.hp = 0;
           VTUI.updateHUD(s);
-          finish(false);
+          finish();
           return;
         }
       }
@@ -288,6 +319,7 @@
     state = resetState(song);
     lastTypeAt = 0;
     setPose("idle");
+    VTUI.updateAllies(state.allies, CFG.allyVisualCap);
     nextPhrase();
     VTUI.showScreen(null);
     VTUI.updateHUD(state);
@@ -297,13 +329,12 @@
     rafId = requestAnimationFrame(loop);
   }
 
-  function finish(cleared){
+  function finish(){
     const s = state;
     s.running = false;
     cancelAnimationFrame(rafId);
     VTAudio.stopBGM();
-    if(cleared) VTAudio.freeChime();
-    VTUI.showResult(s, cleared);
+    VTUI.showResult(s);
   }
 
   // ---- イベント登録 ----

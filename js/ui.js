@@ -48,14 +48,19 @@ const VTUI = (function(){
       '<span class="rest">'+esc(r.slice(typed+1))+'</span>';
   }
 
-  // ---- 敵のDOM生成（HPバー・ジャンルアイコン付き） ----
-  function createEnemyEl(look, genreIcon, isBoss, vibed){
+  // ---- 敵のDOM生成（HPバー・ジャンルアイコン付き。ringColor/hueでティアの見た目を変える） ----
+  function createEnemyEl(look, genreIcon, isBoss, vibed, ringColor, hue){
     const el = document.createElement("div");
     el.className = "enemy" + (isBoss ? " boss" : "") + (vibed ? " vibed" : "");
     el.innerHTML =
       '<div class="hpbar"><div class="hpfill"></div></div>'+
       '<div class="glabel">'+genreIcon+'</div>'+
       '<div class="body">'+look+'</div>';
+    if(ringColor) el.querySelector(".hpbar").style.borderColor = ringColor;
+    if(hue){
+      const shadow = isBoss ? "drop-shadow(0 0 20px var(--pink))" : "drop-shadow(0 3px 4px #000)";
+      el.querySelector(".body").style.filter = "hue-rotate(" + hue + "deg) " + shadow;
+    }
     field().appendChild(el);
     return el;
   }
@@ -125,6 +130,26 @@ const VTUI = (function(){
     setTimeout(() => c.remove(), 750);
   }
 
+  // ---- 仲間表示（解放した人がプレイヤーの周りに並ぶ。上限を超えたら +N 表示） ----
+  function updateAllies(allies, cap){
+    const box = $("allies");
+    const shown = allies.slice(-cap);
+    box.innerHTML = shown.map((a,i) =>
+      '<span class="allyIcon" style="--i:'+i+'">'+a.look+'</span>'
+    ).join("");
+    const extra = allies.length - shown.length;
+    if(extra > 0){
+      box.innerHTML += '<span class="allyMore">+'+extra+'</span>';
+    }
+  }
+
+  // ---- ステージ進行バナー（ボスを解放して次ステージへ） ----
+  function showStageBanner(stage){
+    const el = $("stageBanner");
+    el.innerHTML = 'STAGE ' + stage + '<small>敵の抵抗が強くなった…</small>';
+    el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  }
+
   // ---- ビートインジケータ（拍の頭で強く光る） ----
   function beatPulse(phase){
     const el = $("beatPulse");
@@ -138,6 +163,7 @@ const VTUI = (function(){
   function updateHUD(s){
     $("hpfill").style.width = s.hp + "%";
     $("score").textContent = s.score;
+    $("stage").textContent = s.stage;
     $("combo").textContent = s.combo;
     $("freed").textContent = s.freed;
     const mins = (performance.now() - s.startTime) / 60000;
@@ -147,10 +173,8 @@ const VTUI = (function(){
   }
 
   // ---- 結果画面 ----
-  function showResult(s, cleared){
-    const title = $("resultTitle");
-    title.textContent = cleared ? "STAGE CLEAR!" : "GAME OVER";
-    title.classList.toggle("clear", cleared);
+  function showResult(s){
+    $("resultTitle").textContent = "GAME OVER";
 
     const mins = (performance.now() - s.startTime) / 60000;
     const wpm = mins > 0 ? Math.round((s.correct/5)/mins) : 0;
@@ -164,6 +188,7 @@ const VTUI = (function(){
     }
     $("rank").textContent = rank;
     $("rScore").textContent = s.score;
+    $("rStage").textContent = s.stage;
     $("rFreed").textContent = s.freed;
     $("rWpm").textContent = wpm + " WPM";
     $("rAcc").textContent = acc + "%";
@@ -175,6 +200,7 @@ const VTUI = (function(){
   return {
     showScreen, buildSongList, setRhythmButtons, renderPhrase,
     createEnemyEl, setEnemyHp, showJudge, showFree, showCombo,
-    flashMiss, heroHit, setHeroPose, showGyuin, beatPulse, updateHUD, showResult,
+    flashMiss, heroHit, setHeroPose, showGyuin, updateAllies, showStageBanner,
+    beatPulse, updateHUD, showResult,
   };
 })();

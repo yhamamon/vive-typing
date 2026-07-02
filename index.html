@@ -23,8 +23,9 @@
       <div id="hpbar"><div id="hpfill"></div></div>
     </div>
     <div class="item"><span class="lbl">スコア</span><span class="val" id="score">0</span></div>
+    <div class="item"><span class="lbl">ステージ</span><span class="val" id="stage">1</span></div>
     <div class="item"><span class="lbl">コンボ</span><span class="val" id="combo">0</span></div>
-    <div class="item"><span class="lbl">解放</span><span class="val" id="freed">0</span></div>
+    <div class="item"><span class="lbl">仲間</span><span class="val" id="freed">0</span></div>
     <div class="item"><span class="lbl">速さ WPM</span><span class="val" id="wpm">0</span></div>
     <div class="item"><span class="lbl">正確率</span><span class="val" id="acc">100%</span></div>
   </div>
@@ -171,8 +172,11 @@
         <text class="note n2" x="104" y="20" font-size="12" fill="#ff3bd4">♪</text>
       </svg>
     </div>
+    <!-- 仲間（解放した人たち。プレイヤーの周りに並んで一緒に歌う） -->
+    <div id="allies"></div>
     <div id="comboPop"></div>
     <div id="judgePop"></div>
+    <div id="stageBanner"></div>
     <div id="flash"></div>
 
     <!-- 打ち込みパネル（プレイヤーが曲を「演奏」する場所） -->
@@ -219,7 +223,8 @@
       <div id="rank">見習いグルーヴァー</div>
       <div class="stats">
         <div><div class="k">スコア</div><div class="v" id="rScore">0</div></div>
-        <div><div class="k">解放した人</div><div class="v" id="rFreed">0</div></div>
+        <div><div class="k">到達ステージ</div><div class="v" id="rStage">1</div></div>
+        <div><div class="k">仲間にした人</div><div class="v" id="rFreed">0</div></div>
         <div><div class="k">タイピング速度</div><div class="v" id="rWpm">0 WPM</div></div>
         <div><div class="k">正確率</div><div class="v" id="rAcc">100%</div></div>
         <div><div class="k">最大コンボ</div><div class="v" id="rCombo">0</div></div>
