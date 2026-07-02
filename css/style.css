@@ -113,13 +113,14 @@ body{
   position:absolute;left:50%;bottom:15%;width:0;height:0;z-index:13;pointer-events:none;
 }
 .allyIcon{
-  position:absolute;bottom:calc(var(--row) * 22px);font-size:21px;
+  position:absolute;bottom:calc(var(--row) * 22px);width:17px;height:27px;
   /* --side: 偶数目=左(-1) / 奇数目=右(1)。--row: 外側の人ほど上の段に積み上がる */
   left:calc(var(--side) * (58px + var(--row) * 20px));
   transform:translateX(-50%);
   filter:drop-shadow(0 0 6px var(--cyan));
   animation:allySing .6s ease-in-out infinite;
 }
+.allyIcon svg{width:100%;height:100%;display:block;}
 @keyframes allySing{0%,100%{transform:translateX(-50%) translateY(0) rotate(0deg);}
   50%{transform:translateX(-50%) translateY(-5px) rotate(-4deg);}}
 .allyMore{
@@ -133,8 +134,9 @@ body{
   position:absolute;transform:translate(-50%,-100%);
   text-align:center;z-index:3;will-change:left,top,transform;
 }
-.enemy .body{font-size:50px;filter:drop-shadow(0 3px 4px #000);transition:filter .15s;}
-.enemy.boss .body{font-size:100px;filter:drop-shadow(0 0 20px var(--pink));}
+.enemy .body{width:50px;height:80px;margin:0 auto;filter:drop-shadow(0 3px 4px #000);transition:filter .15s;}
+.enemy .body svg{width:100%;height:100%;display:block;}
+.enemy.boss .body{width:100px;height:160px;filter:drop-shadow(0 0 20px var(--pink));}
 .enemy .hpbar{
   width:64px;height:8px;margin:0 auto 3px;
   border:1px solid var(--cyan);border-radius:4px;overflow:hidden;background:#041018;

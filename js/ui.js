@@ -52,10 +52,11 @@ const VTUI = (function(){
   function createEnemyEl(look, genreIcon, isSpecial, vibed, ringColor, hue){
     const el = document.createElement("div");
     el.className = "enemy" + (isSpecial ? " boss" : "") + (vibed ? " vibed" : "");
+    const art = VT_DATA.enemyArt[look] || look;   // SVGアートがあればそれを、なければ文字列(絵文字等)をそのまま
     el.innerHTML =
       '<div class="hpbar"><div class="hpfill"></div></div>'+
       '<div class="glabel">'+genreIcon+'</div>'+
-      '<div class="body">'+look+'</div>';
+      '<div class="body">'+art+'</div>';
     if(ringColor) el.querySelector(".hpbar").style.borderColor = ringColor;
     if(hue){
       const shadow = isSpecial ? "drop-shadow(0 0 20px var(--pink))" : "drop-shadow(0 3px 4px #000)";
@@ -146,7 +147,7 @@ const VTUI = (function(){
       const row = Math.floor(i / 2);        // 外側の人ほど後の段へ
       const el = document.createElement("span");
       el.className = "allyIcon";
-      el.textContent = a.look;
+      el.innerHTML = VT_DATA.enemyArt[a.look] || a.look;
       el.style.setProperty("--side", side);
       el.style.setProperty("--row", row);
       el.style.animationDelay = (i * 0.06) + "s";
