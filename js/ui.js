@@ -156,7 +156,7 @@ const VTUI = (function(){
     const wpm = mins > 0 ? Math.round((s.correct/5)/mins) : 0;
     const total = s.correct + s.wrong;
     const acc = total > 0 ? Math.round(s.correct/total*100) : 100;
-    const perfectRate = s.correct > 0 ? Math.round(s.perfect/s.correct*100) : 0;
+    const perfectRate = s.onsets > 0 ? Math.round(s.perfect/s.onsets*100) : 0;
 
     let rank = VT_DATA.ranks[VT_DATA.ranks.length-1].name;
     for(const r of VT_DATA.ranks){

@@ -52,7 +52,7 @@
     return {
       song, rhythmOn: settings.rhythmOn,
       hp:100, score:0, combo:0, maxCombo:0,
-      correct:0, wrong:0, perfect:0, good:0,
+      correct:0, wrong:0, perfect:0, good:0, onsets:0,
       freed:0, melodyIdx:0,
       phraseOrder: shuffle(song.phrases.map((_,i)=>i)), phrasePos:0,
       phrase:null, typed:0,
@@ -141,17 +141,23 @@
       VTAudio.melody(mel[s.melodyIdx % mel.length], s.song.genre);
       s.melodyIdx++;
 
-      // --- リズム判定（ビートに近いほどダメージ増） ---
+      // --- リズム判定：フレーズの「入り」（1文字目）だけに適用。
+      //     2文字目以降は自由な速さで打ってよく、タイピング速度がそのままスコアに効く。
+      //     入りのタイミングが合うほどダメージ・スコアが伸びる設計。
+      const isOnset = s.typed === 0;
       let mult = 1;
-      if(s.rhythmOn){
-        const off = VTAudio.beatOffsetMs();
-        if(off != null){
-          if(off <= CFG.judge.perfectMs){
-            mult = CFG.judge.perfectMult; s.perfect++;
-            VTUI.showJudge("PERFECT", "perfect");
-          }else if(off <= CFG.judge.goodMs){
-            mult = CFG.judge.goodMult; s.good++;
-            VTUI.showJudge("GOOD", "good");
+      if(isOnset){
+        s.onsets++;
+        if(s.rhythmOn){
+          const off = VTAudio.beatOffsetMs();
+          if(off != null){
+            if(off <= CFG.judge.perfectMs){
+              mult = CFG.judge.perfectMult; s.perfect++;
+              VTUI.showJudge("PERFECT", "perfect");
+            }else if(off <= CFG.judge.goodMs){
+              mult = CFG.judge.goodMult; s.good++;
+              VTUI.showJudge("GOOD", "good");
+            }
           }
         }
       }
