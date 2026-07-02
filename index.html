@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--
+  VIVE TYPING - バイブスを打ち込め！タイピング×リズムゲーム
+  =========================================================
+  ・PCブラウザ向け。index.html をダブルクリックで起動できる
+  ・曲・フレーズ・敵は js/data.js にまとめてあり、自由に追加・差し替え可能
+  ・音楽はすべて Web Audio API で合成（音源ファイル不要）
+  ・歌詞・曲名はすべてオリジナル（実在曲のオマージュ「風」）
+-->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIVE TYPING</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- 上部HUD -->
+  <div id="hud">
+    <div id="hpwrap" class="item">
+      <span class="lbl">バイブスゲージ（体力）</span>
+      <div id="hpbar"><div id="hpfill"></div></div>
+    </div>
+    <div class="item"><span class="lbl">スコア</span><span class="val" id="score">0</span></div>
+    <div class="item"><span class="lbl">コンボ</span><span class="val" id="combo">0</span></div>
+    <div class="item"><span class="lbl">解放</span><span class="val" id="freed">0</span></div>
+    <div class="item"><span class="lbl">速さ WPM</span><span class="val" id="wpm">0</span></div>
+    <div class="item"><span class="lbl">正確率</span><span class="val" id="acc">100%</span></div>
+  </div>
+
+  <!-- プレイ画面 -->
+  <div id="field">
+    <div id="ground"></div>
+    <div id="hero">🕺</div>
+    <div id="comboPop"></div>
+    <div id="judgePop"></div>
+    <div id="flash"></div>
+
+    <!-- 打ち込みパネル（プレイヤーが曲を「演奏」する場所） -->
+    <div id="typePanel">
+      <div id="beatPulse"></div>
+      <div id="phraseBox">
+        <div id="phraseJp"></div>
+        <div id="phraseRoman"></div>
+      </div>
+    </div>
+
+    <!-- タイトル画面 -->
+    <div id="titleScreen" class="overlay">
+      <h1 class="title">VIVE <span class="pink">TYPING</span></h1>
+      <div class="sub">ー バイブスを打ち込め！ ー</div>
+      <div class="desc">
+        20XX年、進化したAIに人間は洗脳されていった。<br>
+        だが、バイブスの強い者たちは屈しなかった。<br>
+        洗脳を解く方法はただひとつ——<b>音楽を、グルーヴを、打ち込むこと</b>。<br><br>
+        表示されたフレーズをタイプして曲を演奏し、<br>
+        <b>ビートに合わせて打つ</b>ほど、洗脳された人々の心に響く。
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="startBtn">戦いを始める<small>クリックで音が出ます</small></button>
+      </div>
+    </div>
+
+    <!-- 曲選択画面 -->
+    <div id="songScreen" class="overlay hidden">
+      <div class="sub">ー 打ち込む曲を選べ ー</div>
+      <div class="modeRow">
+        <span class="modeLbl">リズムモード：</span>
+        <button class="btn mini sel" id="rhythmOn">ON<small>ビート判定あり</small></button>
+        <button class="btn mini" id="rhythmOff">OFF<small>純粋タイピング練習</small></button>
+      </div>
+      <div id="songList" class="btnrow col"></div>
+      <div class="hint">敵のアイコンと同じジャンルの曲は「刺さって」ダメージが増える</div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="resultScreen" class="overlay hidden">
+      <div id="resultTitle">GAME OVER</div>
+      <div class="sub">ー 戦いの記録 ー</div>
+      <div id="rank">見習いグルーヴァー</div>
+      <div class="stats">
+        <div><div class="k">スコア</div><div class="v" id="rScore">0</div></div>
+        <div><div class="k">解放した人</div><div class="v" id="rFreed">0</div></div>
+        <div><div class="k">タイピング速度</div><div class="v" id="rWpm">0 WPM</div></div>
+        <div><div class="k">正確率</div><div class="v" id="rAcc">100%</div></div>
+        <div><div class="k">最大コンボ</div><div class="v" id="rCombo">0</div></div>
+        <div><div class="k">PERFECT率</div><div class="v" id="rPerfect">0%</div></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="retryBtn">もう一度</button>
+        <button class="btn" id="selectBtn">曲を選び直す</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
