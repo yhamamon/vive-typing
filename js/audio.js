@@ -47,42 +47,53 @@ const VTAudio = (function(){
     return g;
   }
 
-  // ---- ドラム・ベース（時刻tにスケジュール） ----
-  function kick(t){
+  // ---- ドラム・ベース（時刻tにスケジュール。volMulでセクションごとの音量を調整） ----
+  function kick(t, volMul){
     const o = ctx.createOscillator(); o.type = "sine";
     o.frequency.setValueAtTime(150, t);
     o.frequency.exponentialRampToValueAtTime(40, t+0.12);
-    o.connect(envGain(t, .9, .15)); o.start(t); o.stop(t+0.16);
+    o.connect(envGain(t, .9*volMul, .15)); o.start(t); o.stop(t+0.16);
   }
-  function snare(t){
+  function snare(t, volMul){
     const s = noiseSrc();
     const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1800; f.Q.value = .8;
-    s.connect(f); f.connect(envGain(t, .5, .12)); s.start(t); s.stop(t+0.13);
+    s.connect(f); f.connect(envGain(t, .5*volMul, .12)); s.start(t); s.stop(t+0.13);
   }
-  function hat(t){
+  function hat(t, volMul){
     const s = noiseSrc();
     const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 7000;
-    s.connect(f); f.connect(envGain(t, .18, .04)); s.start(t); s.stop(t+0.05);
+    s.connect(f); f.connect(envGain(t, .18*volMul, .04)); s.start(t); s.stop(t+0.05);
   }
-  function bass(t, hz, dur, genre){
+  function bass(t, hz, dur, genre, volMul){
     const o = ctx.createOscillator();
     o.type = (genre === "metal") ? "sawtooth" : "triangle";
     o.frequency.value = hz;
     const f = ctx.createBiquadFilter(); f.type = "lowpass";
     f.frequency.value = (genre === "metal") ? 900 : 500;
-    o.connect(f); f.connect(envGain(t, .35, dur));
+    o.connect(f); f.connect(envGain(t, .35*volMul, dur));
     o.start(t); o.stop(t+dur+0.02);
   }
 
-  // ---- ジャンル別ドラムパターン（1小節 = 8分音符×8ステップ） ----
+  // ---- ジャンル別ドラムパターン（1小節 = 8分音符×8ステップ。サビ・大サビのフル編成として使う） ----
   const PATTERNS = {
     pop:    { kick:[1,0,1,0,1,0,1,0], snare:[0,0,1,0,0,0,1,0], hat:[1,1,1,1,1,1,1,1], bassOn:[1,0,0,1,0,0,1,0] },
     metal:  { kick:[1,1,0,1,1,0,1,1], snare:[0,0,1,0,0,0,1,0], hat:[1,1,1,1,1,1,1,1], bassOn:[1,1,1,1,1,1,1,1] },
     anison: { kick:[1,0,1,0,1,0,1,0], snare:[0,0,1,0,0,0,1,1], hat:[0,1,0,1,0,1,0,1], bassOn:[1,0,1,1,0,1,1,0] },
   };
 
+  // ---- セクションごとの編成の厚み。verseA/Bは薄く、サビでフル、大サビで最大、
+  //      アウトロはドラムを抜いて静かなベースだけにする ----
+  const SECTION_ARRANGE = {
+    verseA:      { drums:"thin",  vol:0.62 },
+    verseB:      { drums:"thin",  vol:0.8  },
+    chorus:      { drums:"full",  vol:1.0  },
+    finalChorus: { drums:"full",  vol:1.2  },
+    outro:       { drums:"hush",  vol:0.5  },
+  };
+  const DEFAULT_ARRANGE = { drums:"full", vol:1.0 };
+
   // ---- BGM スケジューラ ----
-  const bgm = { playing:false, song:null, startTime:0, stepDur:0, step:0, nextTime:0, timer:null };
+  const bgm = { playing:false, song:null, section:null, startTime:0, stepDur:0, step:0, nextTime:0, timer:null };
 
   function startBGM(song){
     ensure();
@@ -95,15 +106,30 @@ const VTAudio = (function(){
     bgm.playing = true;
     bgm.timer = setInterval(schedule, 25);   // 25ms間隔で先読みスケジュール
   }
+  // ---- 現在のセクション（曲構成）をゲーム側から伝える。BGMの編成をそれに合わせて変える ----
+  function setSection(section){
+    bgm.section = section;
+  }
   function schedule(){
     while(bgm.nextTime < ctx.currentTime + 0.12){
       const p = PATTERNS[bgm.song.genre];
+      const arr = SECTION_ARRANGE[bgm.section] || DEFAULT_ARRANGE;
       const s = bgm.step % 8;
       const bar = Math.floor(bgm.step/8) % bgm.song.bass.length;
-      if(p.kick[s])   kick(bgm.nextTime);
-      if(p.snare[s])  snare(bgm.nextTime);
-      if(p.hat[s])    hat(bgm.nextTime);
-      if(p.bassOn[s]) bass(bgm.nextTime, noteHz(bgm.song.bass[bar]), bgm.stepDur*0.9, bgm.song.genre);
+
+      if(arr.drums === "hush"){
+        // アウトロ：ドラムなし。小節の頭にだけ静かなベースを長めに添える
+        if(s === 0) bass(bgm.nextTime, noteHz(bgm.song.bass[bar]), bgm.stepDur*3, bgm.song.genre, arr.vol);
+      }else{
+        const thin = arr.drums === "thin";
+        const kickOn  = thin ? (s === 0 || s === 4) : p.kick[s];
+        const snareOn = !thin && p.snare[s];              // verseは打ち込みが薄いのでスネアなし
+        const hatOn   = thin ? (s % 2 === 0) : p.hat[s];
+        if(kickOn)      kick(bgm.nextTime, arr.vol);
+        if(snareOn)      snare(bgm.nextTime, arr.vol);
+        if(hatOn)         hat(bgm.nextTime, arr.vol * (thin ? 0.7 : 1));
+        if(p.bassOn[s] || thin) bass(bgm.nextTime, noteHz(bgm.song.bass[bar]), bgm.stepDur*0.9, bgm.song.genre, arr.vol);
+      }
       bgm.step++;
       bgm.nextTime += bgm.stepDur;
     }
@@ -173,5 +199,5 @@ const VTAudio = (function(){
     o.connect(envGain(t, .4, .3)); o.start(t); o.stop(t+0.32);
   }
 
-  return { ensure, startBGM, stopBGM, beatOffsetMs, beatPhase, melody, miss, freeChime, damage };
+  return { ensure, startBGM, stopBGM, setSection, beatOffsetMs, beatPhase, melody, miss, freeChime, damage };
 })();

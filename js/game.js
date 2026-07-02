@@ -90,6 +90,7 @@
     const s = state;
     if(section === s.section) return;
     s.section = section;
+    VTAudio.setSection(section);   // BGMの編成（薄い/フル/静か）をセクションに合わせて切り替える
     if(section === "chorus" && !s.midBossSpawned){
       s.midBossSpawned = true;
       s.specialActive = true;
