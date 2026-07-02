@@ -12,12 +12,21 @@
     bossHp: 70,              // ボスの洗脳度
     zakoToBoss: 10,          // 何人解放でボス出現か
     spawnEvery: 1.7,         // 敵の出現間隔（秒）
-    baseSpeed: 0.035,        // 敵の速さ（画面横幅に対する割合/秒）
+    baseSpeed: 0.05,         // 敵の接近速度（奥行き1.0を何秒で詰めるかの割合/秒）
     reachDamage: 15,         // 敵に到達されたときのダメージ
     bossReachDamage: 30,
     phraseBonus: 4,          // フレーズ完走ボーナスダメージ
     judge: { perfectMs:70, goodMs:140, perfectMult:2.0, goodMult:1.5 },
     affinityMult: 1.5,       // 「刺さってる」（ジャンル一致）倍率
+  };
+
+  // ---- 疑似3D視点の設定（敵は地平線から湧き、下中央のプレイヤーへ包囲接近） ----
+  const VIEW = {
+    horizonY: 0.36,   // 地平線の縦位置（fieldの高さ比）
+    playerY:  0.82,   // プレイヤーの足元の縦位置
+    reachZ:   0.06,   // この奥行きまで来たら攻撃される
+    minScale: 0.4,    // 地平線での敵の大きさ
+    maxScale: 1.15,   // 手前まで来たときの敵の大きさ
   };
 
   const settings = { rhythmOn: true };
@@ -75,20 +84,35 @@
       genre, isBoss,
       maxHp: isBoss ? CFG.bossHp : CFG.zakoHp,
       hp:    isBoss ? CFG.bossHp : CFG.zakoHp,
-      x: 1.05,   // 1.0=右端。少し外側から登場
+      // 地平線上のどこから湧くか（横に散らばる。ボスは正面）
+      spawnX: isBoss ? 0.5 : 0.08 + Math.random()*0.84,
+      z: 1.0,    // 奥行き：1.0=地平線（最奥）→ 0=プレイヤー
       speed: CFG.baseSpeed * (isBoss ? 0.45 : 1) * (0.9 + Math.random()*0.3),
     };
-    if(isBoss) el.style.bottom = "30%";
     s.enemies.push(enemy);
     VTUI.setEnemyHp(enemy);
+    positionEnemy(enemy);
     return enemy;
   }
 
-  // ---- ターゲット選択：一番手前（左）の敵 ----
+  // ---- 疑似3D配置：奥行きzから画面上の位置・大きさを決める ----
+  function positionEnemy(e){
+    const t = 1 - e.z;                            // 0=最奥 → 1=手前
+    const conv = 0.25 + 0.75*e.z;                 // 近づくほど中央（プレイヤー）へ収束＝包囲
+    const sx = 0.5 + (e.spawnX - 0.5)*conv;
+    const sy = VIEW.horizonY + (VIEW.playerY - VIEW.horizonY)*t*t; // 手前ほど速く見える
+    const scale = (VIEW.minScale + (VIEW.maxScale - VIEW.minScale)*t) * (e.isBoss ? 1.15 : 1);
+    e.el.style.left = (sx*100) + "%";
+    e.el.style.top  = (sy*100) + "%";
+    e.el.style.transform = "translate(-50%,-100%) scale(" + scale.toFixed(3) + ")";
+    e.el.style.zIndex = 3 + Math.round(t*10);     // 手前の敵ほど前に描画
+  }
+
+  // ---- ターゲット選択：一番手前（プレイヤーに近い）の敵 ----
   function pickTarget(){
     const s = state;
     let best = null;
-    for(const e of s.enemies){ if(!best || e.x < best.x) best = e; }
+    for(const e of s.enemies){ if(!best || e.z < best.z) best = e; }
     s.target = best;
     for(const e of s.enemies) e.el.classList.toggle("target", e === s.target);
   }
@@ -202,18 +226,16 @@
       if(!s.target) pickTarget();
     }
 
-    // 敵の移動と到達判定
-    const w = field.clientWidth;
-    const heroX = 90 / w;
+    // 敵の接近と到達判定（奥→手前へ迫ってくる）
     for(const e of [...s.enemies]){
-      e.x -= e.speed * dt;
-      e.el.style.left = (e.x * 100) + "%";
-      if(e.x <= heroX){
+      e.z -= e.speed * dt;
+      positionEnemy(e);
+      if(e.z <= VIEW.reachZ){
         s.hp -= e.isBoss ? CFG.bossReachDamage : CFG.reachDamage;
         s.combo = 0;
         VTUI.heroHit(); VTUI.flashMiss(); VTAudio.damage();
         if(e.isBoss){
-          e.x = 0.95;          // ボスはノックバックして再襲来
+          e.z = 0.6;           // ボスはノックバックして再襲来
         }else{
           removeEnemy(e);
         }

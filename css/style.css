@@ -38,24 +38,34 @@ body{
 #hpbar{height:16px;border:2px solid var(--pink);border-radius:8px;overflow:hidden;background:#140518;}
 #hpfill{height:100%;width:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .2s;}
 
-/* ===== プレイ画面 ===== */
+/* ===== プレイ画面（奥から敵が迫る疑似3D視点） ===== */
 #field{position:relative;flex:1;overflow:hidden;}
-#ground{position:absolute;left:0;right:0;bottom:22%;height:2px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
+/* 地平線と奥行きグリッドの床 */
+#ground{position:absolute;left:0;right:0;top:34%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  box-shadow:0 0 14px var(--cyan);opacity:.6;}
+#floor{position:absolute;left:-40%;right:-40%;top:34%;bottom:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg, rgba(34,229,255,.14) 0 2px, transparent 2px 90px),
+    repeating-linear-gradient(0deg,  rgba(34,229,255,.10) 0 2px, transparent 2px 64px);
+  transform:perspective(320px) rotateX(58deg);transform-origin:50% 0;}
 
-/* 主人公 */
+/* 主人公（画面下中央・背中越し視点） */
 #hero{
-  position:absolute;left:24px;bottom:22%;
-  font-size:64px;filter:drop-shadow(0 0 14px var(--cyan));
-  transition:transform .08s;z-index:5;
+  position:absolute;left:50%;bottom:12%;transform:translateX(-50%);
+  font-size:76px;filter:drop-shadow(0 0 16px var(--cyan));
+  z-index:15;pointer-events:none;
 }
 #hero.hit{animation:shake .25s;}
-@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+@keyframes shake{
+  0%,100%{transform:translateX(-50%);}
+  25%{transform:translateX(calc(-50% - 10px));}
+  75%{transform:translateX(calc(-50% + 10px));}}
 
-/* ===== 敵 ===== */
+/* ===== 敵（left/top/scale はJSが毎フレーム設定する） ===== */
 .enemy{
-  position:absolute;bottom:22%;transform:translate(-50%,0);
-  text-align:center;z-index:3;will-change:left;
+  position:absolute;transform:translate(-50%,-100%);
+  text-align:center;z-index:3;will-change:left,top,transform;
 }
 .enemy .body{font-size:50px;filter:drop-shadow(0 3px 4px #000);transition:filter .15s;}
 .enemy.boss .body{font-size:100px;filter:drop-shadow(0 0 20px var(--pink));}
@@ -91,7 +101,7 @@ body{
 #comboPop{position:absolute;top:16px;left:50%;transform:translateX(-50%);
   font-size:30px;font-weight:900;color:var(--gold);text-shadow:0 0 12px var(--pink),2px 2px 0 #000;
   opacity:0;transition:opacity .2s;z-index:6;pointer-events:none;}
-#judgePop{position:absolute;left:50%;bottom:17%;transform:translateX(-50%);
+#judgePop{position:absolute;left:50%;bottom:26%;transform:translateX(-50%);
   font-size:34px;font-weight:900;letter-spacing:2px;opacity:0;z-index:7;pointer-events:none;}
 #judgePop.show{animation:jpop .35s;}
 #judgePop.perfect{color:var(--gold);text-shadow:0 0 16px var(--pink),2px 2px 0 #000;}
