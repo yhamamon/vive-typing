@@ -130,24 +130,29 @@ const VTUI = (function(){
     setTimeout(() => c.remove(), 750);
   }
 
-  // ---- 仲間表示（解放した人がプレイヤーの周りに並ぶ。上限を超えたら +N 表示） ----
+  // ---- 仲間表示（解放した人をプレイヤーの左右に交互に並べる。タイピングパネルとは重ならない位置） ----
   function updateAllies(allies, cap){
     const box = $("allies");
+    box.innerHTML = "";
     const shown = allies.slice(-cap);
-    box.innerHTML = shown.map((a,i) =>
-      '<span class="allyIcon" style="--i:'+i+'">'+a.look+'</span>'
-    ).join("");
+    shown.forEach((a, i) => {
+      const side = i % 2 === 0 ? -1 : 1;   // 偶数=左、奇数=右
+      const row = Math.floor(i / 2);        // 外側の人ほど後の段へ
+      const el = document.createElement("span");
+      el.className = "allyIcon";
+      el.textContent = a.look;
+      el.style.setProperty("--side", side);
+      el.style.setProperty("--row", row);
+      el.style.animationDelay = (i * 0.06) + "s";
+      box.appendChild(el);
+    });
     const extra = allies.length - shown.length;
     if(extra > 0){
-      box.innerHTML += '<span class="allyMore">+'+extra+'</span>';
+      const badge = document.createElement("span");
+      badge.className = "allyMore";
+      badge.textContent = "+" + extra;
+      box.appendChild(badge);
     }
-  }
-
-  // ---- ステージ進行バナー（ボスを解放して次ステージへ） ----
-  function showStageBanner(stage){
-    const el = $("stageBanner");
-    el.innerHTML = 'STAGE ' + stage + '<small>敵の抵抗が強くなった…</small>';
-    el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
   }
 
   // ---- ビートインジケータ（拍の頭で強く光る） ----
@@ -163,7 +168,7 @@ const VTUI = (function(){
   function updateHUD(s){
     $("hpfill").style.width = s.hp + "%";
     $("score").textContent = s.score;
-    $("stage").textContent = s.stage;
+    $("remain").textContent = Math.max(0, s.songLength - s.phrasesDone);
     $("combo").textContent = s.combo;
     $("freed").textContent = s.freed;
     const mins = (performance.now() - s.startTime) / 60000;
@@ -172,9 +177,13 @@ const VTUI = (function(){
     $("acc").textContent = (total > 0 ? Math.round(s.correct/total*100) : 100) + "%";
   }
 
-  // ---- 結果画面 ----
-  function showResult(s){
-    $("resultTitle").textContent = "GAME OVER";
+  // ---- 結果画面（outcome = {result:"clear"|"gameover", nice?:boolean}） ----
+  function showResult(s, outcome){
+    const title = $("resultTitle");
+    const cleared = outcome.result === "clear";
+    title.textContent = cleared ? "CLEAR!" : "GAME OVER";
+    title.classList.toggle("clear", cleared);
+    $("niceBadge").classList.toggle("show", cleared && outcome.nice);
 
     const mins = (performance.now() - s.startTime) / 60000;
     const wpm = mins > 0 ? Math.round((s.correct/5)/mins) : 0;
@@ -188,7 +197,7 @@ const VTUI = (function(){
     }
     $("rank").textContent = rank;
     $("rScore").textContent = s.score;
-    $("rStage").textContent = s.stage;
+    $("rPhrase").textContent = s.phrasesDone + " / " + s.songLength;
     $("rFreed").textContent = s.freed;
     $("rWpm").textContent = wpm + " WPM";
     $("rAcc").textContent = acc + "%";
@@ -200,7 +209,7 @@ const VTUI = (function(){
   return {
     showScreen, buildSongList, setRhythmButtons, renderPhrase,
     createEnemyEl, setEnemyHp, showJudge, showFree, showCombo,
-    flashMiss, heroHit, setHeroPose, showGyuin, updateAllies, showStageBanner,
+    flashMiss, heroHit, setHeroPose, showGyuin, updateAllies,
     beatPulse, updateHUD, showResult,
   };
 })();

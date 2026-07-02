@@ -86,19 +86,19 @@ const VT_DATA = {
     ],
   },
 
-  // ---- 敵ティア：ステージが進むほどAIの支配が深く食い込み、敵が硬く・別の見た目になる ----
-  // minStage以上のステージで出現。hpMult/speedMultはステージ1のzakoHp/baseSpeedへの倍率。
+  // ---- 敵ティア：曲の進行度（0〜1）が進むほど、後半に硬い・別の見た目の敵が混ざる ----
+  // minProgress以上の進行度で出現。hpMult/speedMultはzakoHp/baseSpeedへの倍率。
   // hue: CSS hue-rotate(deg) で色味を変えて「違う敵」感を出す。ringColor: HPバー枠の色。
   enemyTiers:[
-    { minStage:1, label:"洗脳された人々",   looks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
-      hpMult:1.0, speedMult:1.0, hue:0,   ringColor:"#22e5ff" },
-    { minStage:2, label:"強化戦闘員",       looks:["🥷","🦹","👺","🧌"],
-      hpMult:1.9, speedMult:1.12, hue:110, ringColor:"#7dff5a" },
-    { minStage:3, label:"機械化兵",         looks:["🤖","👽","💀"],
-      hpMult:3.0, speedMult:1.25, hue:260, ringColor:"#c07dff" },
+    { minProgress:0.00, label:"洗脳された人々", looks:["🧟","🧍","🚶","🧑‍💼","👩‍💻","🧑‍🔧"],
+      hpMult:1.0, speedMult:1.0,  hue:0,   ringColor:"#22e5ff" },
+    { minProgress:0.35, label:"強化戦闘員",     looks:["🥷","🦹","👺","🧌"],
+      hpMult:1.7, speedMult:1.1,  hue:110, ringColor:"#7dff5a" },
+    { minProgress:0.7,  label:"機械化兵",       looks:["🤖","👽","💀"],
+      hpMult:2.4, speedMult:1.2,  hue:260, ringColor:"#c07dff" },
   ],
-  // ---- ボスの見た目（ステージごとに切り替わる。足りない分は最後のものをループ） ----
-  bossLooks:["🤖","👹","👽","🛸"],
+  // ---- ボス（1曲に1体だけ登場する最終戦） ----
+  bossLook:"🤖",
 
   // ---- 仲間ダメージボーナス：s.allies.length に応じてダメージ倍率が伸びる ----
   allyDamagePerAlly: 0.06,

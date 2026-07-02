@@ -7,13 +7,16 @@
   const field = $("field");
 
   // ---- ゲームバランス調整値 ----
+  // 1プレイ＝1曲を最後まで歌いきること。敵（ザコ＋ボス1体）は有限の編成で、
+  // 曲が終われば道中の状況に関わらずCLEAR（全員解放できていればNICE）。
+  // 敵にHPを削られてプレイヤーHPが0になったらGAME OVER。
   const CFG = {
-    zakoHp: 12,              // ザコの洗脳度（HP・ステージ1基準。tier.hpMultで倍率）
-    bossHp: 70,              // ボスの洗脳度（ステージ1基準。ステージが進むと成長）
-    bossHpGrowth: 1.55,      // ステージが1つ進むごとのボスHP成長倍率
-    zakoToBoss: 8,           // 何人解放で次のボスが出現するか（ステージ基準値）
-    zakoToBossGrowth: 2,     // ステージが1つ進むごとに必要人数が何人増えるか
-    spawnEvery: 1.7,         // 敵の出現間隔（秒）
+    songLength: 24,          // 1プレイで歌いきるフレーズ数（＝曲の長さ）
+    totalZako: 18,           // この曲に登場するザコの総数（有限編成。倒しても倒さなくても総数は固定）
+    zakoHp: 12,              // ザコの洗脳度（HP）
+    bossHp: 90,              // ボスの洗脳度（ザコを全員出し切った後に1度だけ出現）
+    spawnEveryStart: 1.7,    // 曲の始めの敵出現間隔（秒）
+    spawnEveryEnd: 0.9,      // 曲の終盤の敵出現間隔（秒。短いほど同時に出る敵が増える＝後半の難化）
     baseSpeed: 0.05,         // 敵の接近速度（奥行き1.0を何秒で詰めるかの割合/秒。tier.speedMultで倍率）
     reachDamage: 15,         // 敵に到達されたときのダメージ
     bossReachDamage: 30,
@@ -59,20 +62,26 @@
       freed:0, melodyIdx:0,
       phraseOrder: shuffle(song.phrases.map((_,i)=>i)), phrasePos:0,
       phrase:null, typed:0,
+      songLength: CFG.songLength, phrasesDone:0,
       enemies:[], target:null, enemyId:0,
-      spawnTimer:0, bossPending:false, bossActive:false,
-      stage:1, stageFreed:0,          // 現ステージで倒した人数（ボス出現の判定用）
+      spawnTimer:0, bossActive:false, bossSpawned:false, bossDefeated:false,
+      zakoSpawned:0, zakoFreed:0, zakoLeaked:0,   // zakoLeaked>0ならNICE達成不可
       allies:[],                       // 解放して仲間になった人の見た目リスト（永続バフの源）
       running:true,
       startTime: performance.now(),
     };
   }
 
-  // ---- 現ステージの敵ティアを取得（minStage以下の中で最も高いもの） ----
-  function currentTier(stage){
+  // ---- 曲の進行度（0〜1）。フレーズをどれだけ歌い終えたか ----
+  function songProgress(s){
+    return Math.min(1, s.phrasesDone / s.songLength);
+  }
+
+  // ---- 現在の進行度の敵ティアを取得（minProgress以下の中で最も高いもの） ----
+  function currentTier(progress){
     const tiers = VT_DATA.enemyTiers;
     let best = tiers[0];
-    for(const t of tiers){ if(t.minStage <= stage) best = t; }
+    for(const t of tiers){ if(t.minProgress <= progress) best = t; }
     return best;
   }
 
@@ -88,32 +97,30 @@
     VTUI.renderPhrase(s.phrase, 0);
   }
 
-  // ---- 敵の生成（ステージに応じたティアから見た目・強さを決める） ----
+  // ---- 敵の生成（曲の進行度に応じたティアから見た目・強さを決める） ----
   function spawnEnemy(isBoss){
     const s = state;
     const genreKeys = Object.keys(VT_DATA.genres);
-    const tier = currentTier(s.stage);
+    const tier = currentTier(songProgress(s));
     // ボスはAIなので相性なし。ザコはランダムなジャンルが「刺さる」
     const genre = isBoss ? null : genreKeys[Math.floor(Math.random()*genreKeys.length)];
     const icon  = isBoss ? "⚡" : VT_DATA.genres[genre].icon;
-    const looks = VT_DATA.bossLooks;
-    const look  = isBoss ? looks[Math.min(s.stage-1, looks.length-1)]
-                          : tier.looks[Math.floor(Math.random()*tier.looks.length)];
+    const look  = isBoss ? VT_DATA.bossLook : tier.looks[Math.floor(Math.random()*tier.looks.length)];
     const vibed = !isBoss && genre === s.song.genre;
-    const bossHp = Math.round(CFG.bossHp * Math.pow(CFG.bossHpGrowth, s.stage-1));
     const zakoHp = Math.round(CFG.zakoHp * tier.hpMult);
     const el = VTUI.createEnemyEl(look, icon, isBoss, vibed, isBoss ? "#ff3bd4" : tier.ringColor, tier.hue);
     const enemy = {
       id: ++s.enemyId, el,
       hpEl: el.querySelector(".hpfill"),
       genre, isBoss, look,
-      maxHp: isBoss ? bossHp : zakoHp,
-      hp:    isBoss ? bossHp : zakoHp,
+      maxHp: isBoss ? CFG.bossHp : zakoHp,
+      hp:    isBoss ? CFG.bossHp : zakoHp,
       // 地平線上のどこから湧くか（横に散らばる。ボスは正面）
       spawnX: isBoss ? 0.5 : 0.08 + Math.random()*0.84,
       z: 1.0,    // 奥行き：1.0=地平線（最奥）→ 0=プレイヤー
       speed: CFG.baseSpeed * (isBoss ? 0.45 : tier.speedMult) * (0.9 + Math.random()*0.3),
     };
+    if(!isBoss) s.zakoSpawned++;
     s.enemies.push(enemy);
     VTUI.setEnemyHp(enemy);
     positionEnemy(enemy);
@@ -196,7 +203,14 @@
       damageTarget(1*mult + (complete ? CFG.phraseBonus : 0));
       s.score += Math.round(10 * mult * (1 + Math.min(s.combo,50)*0.05));
 
-      if(complete && s.running) nextPhrase();
+      if(complete && s.running){
+        s.phrasesDone++;
+        if(s.phrasesDone >= s.songLength){
+          finishClear();      // 曲を最後まで歌いきった
+        }else{
+          nextPhrase();
+        }
+      }
     }else{
       // --- ミス：外れた音が鳴りコンボが切れる ---
       s.wrong++;
@@ -235,19 +249,12 @@
     removeEnemy(e);
 
     if(e.isBoss){
-      // ボスを解放したら次のステージへ（より硬い敵が出てくる）
       s.bossActive = false;
-      s.stage++;
-      s.stageFreed = 0;
-      VTUI.showStageBanner(s.stage);
+      s.bossDefeated = true;
       pickTarget();
       return;
     }
-    s.stageFreed++;
-    const need = CFG.zakoToBoss + (s.stage-1) * CFG.zakoToBossGrowth;
-    if(s.stageFreed >= need && !s.bossActive && !s.bossPending){
-      s.bossPending = true;
-    }
+    s.zakoFreed++;
     pickTarget();
   }
 
@@ -265,14 +272,17 @@
     lastTime = now;
     const s = state;
 
-    // 敵の出現（規定数解放後、画面が空いたらボス登場）
+    // 敵の出現：ザコは有限編成（totalZako体）で、曲が進むほど出現間隔が短くなる。
+    // ザコを出し切って画面が空いたら、最後に1度だけボスが出現する。
     s.spawnTimer += dt;
-    if(s.bossPending && s.enemies.length === 0){
-      s.bossPending = false;
+    const spawnEvery = CFG.spawnEveryStart +
+      (CFG.spawnEveryEnd - CFG.spawnEveryStart) * songProgress(s);
+    if(!s.bossSpawned && s.zakoSpawned >= CFG.totalZako && s.enemies.length === 0){
+      s.bossSpawned = true;
       s.bossActive = true;
       spawnEnemy(true);
       pickTarget();
-    }else if(!s.bossActive && !s.bossPending && s.spawnTimer >= CFG.spawnEvery){
+    }else if(!s.bossActive && s.zakoSpawned < CFG.totalZako && s.spawnTimer >= spawnEvery){
       s.spawnTimer = 0;
       spawnEnemy(false);
       if(!s.target) pickTarget();
@@ -287,15 +297,16 @@
         s.combo = 0;
         VTUI.heroHit(); VTUI.flashMiss(); VTAudio.damage();
         if(e.isBoss){
-          e.z = 0.6;           // ボスはノックバックして再襲来
+          e.z = 0.6;           // ボスはノックバックして再度向かってくる（倒すまで居座る）
         }else{
+          s.zakoLeaked++;      // 倒せず素通りされた＝NICE達成不可
           removeEnemy(e);
         }
         pickTarget();
         if(s.hp <= 0){
           s.hp = 0;
           VTUI.updateHUD(s);
-          finish();
+          finishGameOver();
           return;
         }
       }
@@ -329,12 +340,22 @@
     rafId = requestAnimationFrame(loop);
   }
 
-  function finish(){
+  function finishGameOver(){
+    finish({ result:"gameover" });
+  }
+  function finishClear(){
+    const s = state;
+    // ザコを一人も逃さず、ボスが出た場合はそれも倒していれば「NICE」
+    const nice = s.zakoLeaked === 0 && (!s.bossSpawned || s.bossDefeated);
+    finish({ result:"clear", nice });
+  }
+  function finish(outcome){
     const s = state;
     s.running = false;
     cancelAnimationFrame(rafId);
     VTAudio.stopBGM();
-    VTUI.showResult(s);
+    if(outcome.result === "clear") VTAudio.freeChime();
+    VTUI.showResult(s, outcome);
   }
 
   // ---- イベント登録 ----
